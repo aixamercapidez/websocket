@@ -4,7 +4,7 @@ const { Router } = require('express')
 const router = Router()
 
 
-router.get('/realtimeprod', (req,res)=>{
+router.get('/realtimeproducts', (req,res)=>{
 res.render('realTimeProducts',  {})
 
 

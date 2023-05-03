@@ -1,82 +1,74 @@
-const { Router } = require('express')
-const { ProductManager } = require('../ProductManager/ProductManager')
+const {Router} =require('express')
+const productManager = require('../dao/mongo/product.mongo.js')
 
-const router = Router()
-const products = new ProductManager();
+const router =  Router()
 
-
-
-router.get('/', async (request, response)=>{
-    try{
-    let limit = request.query.limit
-    const getproducts = await products.getProducts()
-    if(limit == null){
-        response.status(200).send(getproducts)
-    }else{
-        response.status(200).send(getproducts.slice(0,limit))
-    }
-    
-    }
-    catch (error){
-        response.status(500).send({error:"Product not found"})
+router.get('/', async (req,res)=>{
+    try {
+        const products = await productManager.getProducts()
+        res.status(200).send({
+            status: 'success',
+            payload: products
+        })
+        
+    } catch (error) {
+        cconsole.log(error)
     }
 })
-
-router.get('/:pid', async (request, response)=>{
-    try{
-        const id =Number( request.params.pid)
-        const getproductsbyid = await products.getProductById(id)
-        if (getproductsbyid == 'Not found') return response.status(400).send({error:"Product not found"})
-        response.status(200).send(getproductsbyid)
-    }
-    catch(error){
-        response.status(500).send({error:"Product not found"})
-    }
-})
-
-router.post('/', async (request, response)=>{
-    try{
-        const newproduct = request.body
-        const product = await products.addProduct(newproduct)
-        if(!newproduct.title || !newproduct.description || !newproduct.price || !newproduct.code || !newproduct.stock || !newproduct.category){ 
-            return response.status(400).send({status:'error', mensaje: 'All fields are required (except thumbnail)'})
-        }
-       if (product === 1){
-        return response.status(400).send({status:'error', mensaje: 'Duplicated Code'})
-    }
-       
-        else{
-        response.status(201).send({status:'success', payload: product})}
-
-    }catch(error){
-        response.status(500).send({error})
+router.get('/:pid', async (req,res)=>{
+    try {
+        const {pid} = req.params
+        let product = await productManager.getProductById(pid)
+        res.status(200).send({
+            status: 'success',
+            payload: product
+        })
+    } catch (error) {
+        console.log(error)
     }
 })
+router.post('/', async (req,res)=>{
+    try {
+        const newProduct = req.body
 
-router.put('/:pid', async (request, response)=>{
-    try{
-        const id =Number(request.params.pid)
-        const updateproduct = request.body
-        const product = await products.updateProduct(id,updateproduct)
-        response.status(200).send({status: "success", payload : product})
-    }
-    catch(error){
-        response.status(500).send({error})
-    }
+        let result = await productManager.addProduct(newProduct)
 
+
+        res.status(200).send({
+            status: 'success',
+            payload: result
+        })
+    } catch (error) {
+        console.log(error)
+    }
 })
+router.put('/:pid', async(req,res)=>{
+    try {
+        const {pid} = req.params
+        const updateProduct = req.body
+
+        let updated = await productManager.updateProduct(pid,updateProduct)
 
 
-router.delete('/:pid', async (request, response)=>{
-    
-        const id =Number( request.params.pid)
-        const deleteproductsbyid = await products.deleteProduct(id)
-        if (deleteproductsbyid === 1) {return response.send({error:"Product not found"})}
-        else{
-        response.status(200).send({status: 'success'})}
-   
-   
-
+        res.status(200).send({
+            status: 'success',
+            payload: updated
+        })
+    } catch (error) {
+        console.log(error)
+    }
+})
+router.delete('/:pid',async (req,res)=>{
+    try {
+        const {pid} = req.params
+        let product = await productManager.getProductById(pid)
+        res.status(200).send({
+            status: 'success',
+            payload: product
+        })
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 module.exports = router

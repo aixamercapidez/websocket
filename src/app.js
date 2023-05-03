@@ -1,59 +1,22 @@
 const express = require('express')
-const handlebars = require('express-handlebars')
+const {connectDb} = require('./config/configServer.js')
+const routerServer = require('./routes')
+const logger = require('morgan')
+
 const app = express()
-const { ProductManager } = require('./ProductManager/ProductManager')
-const productRouter = require('./routes/products.router')
-const cartRouter = require('./routes/carts.router')
-const viewRouter = require('./routes/views.router')
+const PORT = 8080
 
-//hbs ______________________________________________________________
+connectDb()
 
-const {Server} = require('socket.io')
-//const { socketProduct } = require('./utils/socketProduct')
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use('/static',express.static(__dirname+'/public'))
+app.use(logger('dev'))
 
-const httpServer = app.listen(8080, ()=>{
-    console.log('Escuchando en el puerto 8080')
+
+app.use(routerServer)
+
+app.listen(PORT, (err)=> {
+    if (err) console.log('Erro en el servidor', err)
+    console.log(`Escuchando en el puerto: ${PORT}`)
 })
-// app.use(express.static(__dirname+'/public'))
-
-const io = new Server(httpServer)
-
-
-const productos = new ProductManager();
-
-
-
-const socketProduct = async (io) => {
-    const products = await productos.getProducts()
-    io.on('connection', socket => {
-
-        console.log('cliente conectado')
-     
-        socket.emit('productos',products )
-    })
-}
-
-socketProduct(io)
-
-
-app.engine('handlebars', handlebars.engine())
-app.set('views', './views')
-app.set('view engine', 'handlebars')
-app.get('/',async (req,res) =>{
-    const getproducts = await productos.getProducts()
-let producs={
-   getproducts
-}
-    res.render('home',producs)
-})
-
-//hbs ______________________________________________________________
-
-app.use(express.json()) 
-app.use(express.urlencoded({ extended: true }));
-
-
-app.use('/api/products',productRouter)
-app.use('/api/carts',cartRouter)
-app.use('/',viewRouter)
-

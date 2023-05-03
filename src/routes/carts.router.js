@@ -1,43 +1,63 @@
-const { Router } = require('express')
-const { CartManager } = require('../CartManager/CartManager')
+const {Router} =require('express')
+const CartManager = require('../dao/mongo/cart.mongo.js')
 
 const router = Router()
-const carts = new CartManager();
 
+router.get('/', async (req,res)=>{
+    try {
+        const carts = await CartManager.getCarts()
+        res.status(200).send({
+            status: 'success',
+            payload: carts
+        })
+        
+    } catch (error) {
+        cconsole.log(error)
+    }
+})
 
 router.post('/', async (request, response)=>{
-    try{
+    try {
         
-        const cart = await carts.addCart()
-        response.status(200).send({status: "success"})
 
-    }catch(error){
-        response.status(500).send({error})
+        let result = await CartManager.addCart()
+
+
+        res.status(200).send({
+            status: 'success',
+            payload: result
+        })
+    } catch (error) {
+        console.log(error)
     }
 })
 
 
-router.get('/:cid', async (request, response)=>{
-    try{
-        const id =Number( request.params.cid)
-        const getcartbyid = await carts.getcartById(id)
-        if (getcartbyid == 'Not found') return response.status(400).send({error:"Product not found"})
-        response.status(200).send(getcartbyid)
-    }
-    catch(error){
-        response.status(500).send({error})
+router.get('/:pid', async (req,res)=>{
+    try {
+        const {cid} = req.params
+        let cart = await CartManager.getCartById(cid)
+        res.status(200).send({
+            status: 'success',
+            payload: cart
+        })
+    } catch (error) {
+        console.log(error)
     }
 })
 
 router.post('/:cid/product/:pid', async (request, response)=>{
     try{
-        const cid =Number( request.params.cid)
-        const pid =Number( request.params.pid)
-        const cart = await carts.addProduct(cid,pid)
-        response.status(200).send({status: "success", payload : {cart}})
+        const {cid} = req.params
+        const {pid} = req.params
+        const cart = await CartManager.addProduct(cid,pid)
+        res.status(200).send({
+            status: 'success',
+            payload: cart
+        })
 
     }catch(error){
-        response.status(500).send({error})
+        console.log(error)
     }
 })
 
